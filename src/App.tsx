@@ -1,3 +1,5 @@
+import { FormBuilderShow } from './pages/form-builder/show';
+import { FormBuilder } from './pages/form-builder/list';
 import { Authenticated, GitHubBanner, Refine } from "@refinedev/core";
 import { KBarProvider } from "@refinedev/kbar";
 import {
@@ -93,6 +95,16 @@ const App: React.FC = () => {
                                     },
                                 },
                                 {
+                                    name: "form-builder",
+                                    list: "/my-form",
+                                    show: "/my-form/:id"
+                                },
+                                {
+                                    name: "schema-builder",
+                                    list: "/my-schema",
+                                    show: "/my-schema/:id"
+                                },
+                                {
                                     name: "orders",
                                     list: "/orders",
                                     show: "/orders/show/:id",
@@ -170,8 +182,7 @@ const App: React.FC = () => {
                                     }
                                 >
                                     <Route index element={<DashboardPage />} />
-
-                                    <Route path="/orders">
+=                                    <Route path="/orders">
                                         <Route index element={<OrderList />} />
                                         <Route
                                             path="show/:id"
@@ -189,6 +200,14 @@ const App: React.FC = () => {
 
                                     <Route
                                         path="/products"
+                                        element={<ProductList />}
+                                    />
+                                    <Route
+                                        path="/form-builder"
+                                        element={<ProductList />}
+                                    />
+                                    <Route
+                                        path="/schema-builder"
                                         element={<ProductList />}
                                     />
 
