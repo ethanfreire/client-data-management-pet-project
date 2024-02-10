@@ -1,57 +1,77 @@
 import React, { useEffect, useState } from "react";
-import PocketBase from 'pocketbase';
-
-interface Record {
-    first_name: string;
-    last_name: string;
-    favorite_number: number;
-}
+import PocketBase from "pocketbase";
 
 export const PocketBaseDataDisplay: React.FC = () => {
-    const pb = new PocketBase('http://127.0.0.1:8090');
-    const [records, setRecords] = useState<Record[]>([]);
+  const [collectionRecords, setCollectionRecords] = useState<Record[]>([]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            await pb.admins.authWithPassword('element55star@gmail.com', '@Reactelement5*');
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let url = import.meta.env.VITE_ROGER_POCKETBASE_URL;
+        let email = import.meta.env.VITE_POCKETBASE_ADMIN_ETHAN_EMAIL;
+        let password = import.meta.env.VITE_POCKETBASE_ADMIN_ETHAN_PASSWORD;
 
-            // Read a collection
-            const collection = await pb.collections.getOne('test');
-            console.log(collection);
-            const fetchedRecords = await pb.collection('test').getFullList({
-                sort: '-created',
-            });
-            console.log(fetchedRecords);
-            setRecords(fetchedRecords);
-        };
+        const pb = new PocketBase(url);
+        await pb.admins.authWithPassword(email, password);
 
-        fetchData();
-    }, []);
+        const collections = await pb.collections.getFullList({
+          sort: "-created",
+        });
 
-    return (
-        <>
-            {records.length > 0 ? (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Favorite Number</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {records.map((record, index) => (
-                            <tr key={index}>
-                                <td>{record.first_name}</td>
-                                <td>{record.last_name}</td>
-                                <td>{record.favorite_number}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            ) : (
-                <p>No records found.</p>
-            )}
-        </>
-    );
+        const collectionsNameAndID = collections.map((item) => ({
+          name: item.name,
+          id: item.id,
+        }));
+
+        let allRecords: { [key: string]: Record[] } = {};
+
+        for (const collection of collectionsNameAndID) {
+          const collectionRecords = await pb
+            .collection(collection.id)
+            .getFullList();
+          // Only add to the collection allRecords if it's not empty
+          if (collectionRecords.length > 0) {
+            allRecords[collection.name] = collectionRecords;
+          }
+        }
+        setCollectionRecords(allRecords);
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      {Object.entries(collectionRecords).map(([key, values]) => (
+        <div key={key}>
+          <h2>{key}</h2>
+          {values.length > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  {Object.keys(values[0]).map((header) => (
+                    <th key={header}>{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {values.map((value, index) => (
+                  <tr key={index}>
+                    {Object.values(value).map((cell, i) => (
+                      <td key={i}>{cell.toString()}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No records found</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 };
